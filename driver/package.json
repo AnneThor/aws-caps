@@ -1,0 +1,16 @@
+{
+  "name": "driver",
+  "version": "1.0.0",
+  "description": "A node app that will poll an AWS SQS queue, process results, and post them to an SNS message as well as a separate Queue for finalized results",
+  "main": "driver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Anne Thorsteinson",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.892.0",
+    "sqs-consumer": "^5.5.0",
+    "sqs-producer": "^2.1.0"
+  }
+}
