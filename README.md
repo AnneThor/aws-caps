@@ -3,38 +3,24 @@ An event driven package delivery system notification service hosted on AWS and u
 
 ## Project planning 
 
-Initially, I read the lab instructions and imagined the app to be structured like this:
+You can check out [my first iteration of this project here.](README-old.md)
 
-![UML of original idea](./assets/Lab19.png)
+## UML Diagram 
 
-Conceptually that was a little difficult for me, so I asked John who gave me the following instructions:
+![Final-UML](./assets/final-uml.png)
 
-![instructions from John](./assets/structure.png)
+## Demonstration of system
 
-So I revised the plan to make the following:
+This implementation works as follows:
 
-![UML of constructed project](./assets/Lab19-revised.png)
+1. **vendor.js** app starts and sends new messages off to the caps-enRoute SNS; Note that vendors have .env variables ```STORE_NAME```, that will fill in the name of the store and ```STORE_URL``` that provides the store specific SQS locator. This means the code can be exactly copied and used for infinite vendors. In the example I made a flower shop and a pizza delivery, but they are the identical code with different .env files 
+2. The **caps-enRoute SNS** sends out a message when it receives a new order 
+3. The **caps-newOrders SQS** subscribes to this message and enqueues the new orders 
+4. The **driver.js** app (and you could copy and make as many of them as needed as workers) polls the **caps-newOrders SQS** and processes new orders when it is available 
+5. After 10 seconds the **driver.js** app publishes to the **caps-driverEnRoute SNS**
+6. After 20 seconds the **driver.js** app takes the queueUrl off the order object and sends the order item to the delivered SQS that corresponds to the vendor it came from
+7. The **vendors** poll their SQS queues and print a thank you message when they have delivered objects to process
 
-## Demonstration of System
+## Proof of Life 
 
-This implementation works as follows 
-
-1. **vendor.js** app starts and sends messages off to the new order SQS
-2. **driver.js** polls the new order SQS and processes orders when available
-3. When drivers take an order, they publish an alert to the en Route SNS 
-4. Vendors are listening for this, but I didn't have a protocol to receive the message (it isn't an email, sms, etc. it's just a node app)
-5. When drivers take an order, it is removed from the new orders queue and added to the delivered orders queue 
-6. Drivers log a message that the order has been delivered
-7. Vendors poll the delivered orders SQS and they print a thank you message when they receive delivered order objects 
-
-Here is a sample of the running **VENDOR** app
-
-![Terminal screenshot of vendor](./assets/vendor.png)
-
-Here is a sample of the running **DRIVER** app 
-
-![Terminal screenshot of driver](./assets/driver.png)
-
-## Improvements 
-
-In getting a few pieces starting to come together here, I think I have a better idea of how to structure apps using different AWS pieces. When I have time I will go back and implement a more meaningful version of this project.
+![Terminal screenshot of system at work](./assets/lab18-updated-terminal.png)
