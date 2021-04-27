@@ -7,26 +7,26 @@ const { Producer } = require('sqs-producer');
 
 const sns = new AWS.SNS();
 const topic = `arn:aws:sns:us-west-2:028458219246:caps-enRoute`
-
-// create the producer
-const producer = Producer.create({
-  queueUrl: `https://sqs.us-west-2.amazonaws.com/028458219246/caps-deliveredOrders`,
-  region: `us-west-2`
-})
+const topic2 = `arn:aws:sns:us-west-2:028458219246:caps-driverEnRoute`
 
 const app = Consumer.create({
   queueUrl: `https://sqs.us-west-2.amazonaws.com/028458219246/caps-newOrders`,
   handleMessage: async(message) => {
-    sendEnRoute(message);
-    addToDeliveredQ(message);
+    setTimeout( () => {
+      sendEnRoute(message);
+    }, 1000*10)
+    setTimeout(() => {
+      addToDeliveredQ(message);
+    }, 1000*20)
   }
 })
 
 function sendEnRoute(message) {
   let body = JSON.parse(message.Body);
+  body = JSON.parse(body.Message);
   const payload = {
     Message: `Order ${body.id} from store ${body.store} for ${body.customer} is en route!`,
-    TopicArn: topic
+    TopicArn: topic2
   }
   sns.publish(payload).promise()
   .then(data => {
@@ -36,15 +36,25 @@ function sendEnRoute(message) {
 }
 
 async function addToDeliveredQ(message) {
+
+  message = JSON.parse(message.Body).Message;
+  message = JSON.parse(message);
+
+  // create the producer
+  const producer = Producer.create({
+    queueUrl: message.queueUrl,
+    region: `us-west-2`
+  })
+
   try {
-    let messageContents = JSON.parse(message.Body);
-    messageContents.status = "delivered";
-    let updMessage = JSON.stringify(messageContents);
+    message.status = "delivered";
+    let updMessage = JSON.stringify(message);
     const response = await producer.send({
-      id: message.MessageId,
+      id: message.id,
       body: updMessage
     });
-    console.log("Added to delivered SQS", response);
+    console.log(`Added order #${message.orderID} to ${message.store} delivered SQS`)
+    ;
   } catch (err) {
     console.log(err);
   }
