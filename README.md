@@ -1,5 +1,5 @@
 # aws-caps
-An event driven package delivery system notification service hosted on AWS and using SNS, SQS and Lambda serverless functions
+An event driven package delivery system notification service hosted on AWS and using SNS, SQS and locally hosted node.js apps
 
 ## Project planning 
 
